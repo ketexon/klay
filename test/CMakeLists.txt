@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
 	KTest
 	GIT_REPOSITORY https://github.com/ketexon/KTest
-	GIT_TAG 7236f6c68adfaf9886cf8acab209452df20c7d76
+	GIT_TAG main
 )
 
 FetchContent_MakeAvailable(KTest)
