@@ -4,7 +4,7 @@ project(KLay)
 
 add_library(
 	KLay
-	src/KLay.cpp
+	src/Klay.cpp
 	src/ToString.cpp
 	include/klay/Klay.hpp
 	include/klay/Geometry.hpp
