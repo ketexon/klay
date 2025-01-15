@@ -57,19 +57,19 @@ TEST_CASE("Basic flexbox without basis", BasicFlex) {
 	element->ComputeLayout(PxRect::FromLTRB(0, 0, 600, 0));
 
 	TestCase::AssertEq(
-		child1->ComputedLayout.Rect,
+		child1->ComputedRect,
 		PxRect::FromXYWH(0, 0, 100, 0),
 		"Child 1 has wrong layout"
 	);
 
 	TestCase::AssertEq(
-		child2->ComputedLayout.Rect,
+		child2->ComputedRect,
 		PxRect::FromXYWH(100, 0, 200, 0),
 		"Child 2 has wrong layout"
 	);
 
 	TestCase::AssertEq(
-		child3->ComputedLayout.Rect,
+		child3->ComputedRect,
 		PxRect::FromXYWH(300, 0, 300, 0),
 		"Child 3 has wrong layout"
 	);

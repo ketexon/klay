@@ -9,10 +9,6 @@
 #include <klay/Geometry.hpp>
 
 namespace Klay {
-	struct ComputedLayout {
-		PxRect Rect;
-	};
-
 	enum class Align {
 		Start,
 		Center,
@@ -47,7 +43,7 @@ namespace Klay {
 		std::vector<std::shared_ptr<Element>> Children;
 
 		PxSize ComputedMinSize;
-		ComputedLayout ComputedLayout;
+		PxRect ComputedRect;
 
 		constexpr Element()
 			: Size{}

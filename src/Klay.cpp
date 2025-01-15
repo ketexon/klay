@@ -46,7 +46,7 @@ void Klay::Element::ComputeFlexLayout(const Klay::PxRect& parentRect) noexcept {
 
 			rect.GetAxis(crossAxis).Length = child->ComputedMinSize.GetAxis(crossAxis).Value;
 
-			child->ComputedLayout.Rect = rect;
+			child->ComputedRect = rect;
 
 			curChildOffset += lengthPx;
 		}
