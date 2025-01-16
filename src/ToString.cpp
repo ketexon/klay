@@ -1,4 +1,5 @@
 #include <klay/Klay.hpp>
+#include <klay/ToString.hpp>
 
 std::string Klay::to_string(const Unit& unit) {
 	return std::visit([](auto&& arg) -> std::string {
@@ -20,3 +21,10 @@ std::string Klay::to_string(const Segment<Px>& segment) {
 std::string Klay::to_string(const PxRect& rect) {
 	return "PxRect { " + to_string(rect.Horizontal()) + ", " + to_string(rect.Vertical()) + " }";
 }
+
+#define KLAY_IMPL_OSTREAM_OPERATOR(T) std::ostream& operator<< (std::ostream& os, const T& v) { return os << Klay::to_string(v); }
+
+KLAY_IMPL_OSTREAM_OPERATOR(Klay::Unit)
+KLAY_IMPL_OSTREAM_OPERATOR(Klay::Px)
+KLAY_IMPL_OSTREAM_OPERATOR(Klay::Segment<Klay::Px>)
+KLAY_IMPL_OSTREAM_OPERATOR(Klay::PxRect)

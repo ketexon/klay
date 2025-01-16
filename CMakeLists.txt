@@ -5,9 +5,12 @@ project(KLay)
 add_library(
 	KLay
 	src/Klay.cpp
-	src/ToString.cpp
+	include/klay/ToString.hpp src/ToString.cpp
 	include/klay/Klay.hpp
+	include/klay/Unit.hpp
 	include/klay/Geometry.hpp
+	include/klay/Element.hpp
+	include/klay/ElementBuilder.hpp
 )
 
 set_target_properties(

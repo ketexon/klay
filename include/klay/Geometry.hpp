@@ -3,16 +3,56 @@
 #include <variant>
 #include <optional>
 
+#include <klay/Unit.hpp>
+
 namespace Klay {
 	enum class Axis {
 		Horizontal = 0,
 		Vertical = 1,
 	};
 
+	enum class Edge {
+		Start = 0,
+		End = 1,
+	};
+
 	constexpr Axis CrossAxis(Axis axis) {
 		return axis == Axis::Horizontal ? Axis::Vertical : Axis::Horizontal;
 	}
 
+	/// @brief Represents a length on 2 sides of a segment
+	/// @tparam T
+	template<typename T>
+	struct EdgeLength {
+		T Edges[2];
+
+		constexpr T& GetEdge(Edge edge) {
+			return Edges[static_cast<size_t>(edge)];
+		}
+
+		constexpr const T& GetEdge(Edge edge) const {
+			return Edges[static_cast<size_t>(edge)];
+		}
+
+		constexpr T& Start() {
+			return GetEdge(Edge::Start);
+		}
+
+		constexpr const T& Start() const {
+			return GetEdge(Edge::Start);
+		}
+
+		constexpr T& End() {
+			return GetEdge(Edge::End);
+		}
+
+		constexpr const T& End() const {
+			return GetEdge(Edge::End);
+		}
+	};
+
+	/// @brief Represents a range of values from a start to an end
+	/// @tparam T
 	template<typename T>
 	struct Segment {
 		T Start;
@@ -25,45 +65,14 @@ namespace Klay {
 		constexpr bool operator== (const Segment& other) const noexcept {
 			return Start == other.Start && Length == other.Length;
 		}
-	};
-	struct Px {
 
-		float Value;
-
-		constexpr Px(float v = 0) : Value(v) {}
-
-		constexpr bool operator== (const Px& other) const noexcept {
-			return Value == other.Value;
-		}
-		constexpr bool operator== (const float other) const noexcept {
-			return Value == other;
-		}
-		constexpr Px operator+ (const Px& other) const noexcept {
-			return Px{Value + other.Value};
-		}
-		constexpr Px& operator+= (const Px& other) noexcept {
-			Value += other.Value;
-			return *this;
-		}
-		constexpr Px operator- (const Px& other) const noexcept {
-			return Px{Value - other.Value};
-		}
-		constexpr Px& operator-= (const Px& other) noexcept {
-			Value -= other.Value;
-			return *this;
-		}
-
-		constexpr bool operator< (const Px& other) const noexcept {
-			return Value < other.Value;
-		}
-
-		constexpr Px& operator= (const float other) noexcept {
-			Value = other;
-			return *this;
+		constexpr Segment operator+ (const EdgeLength<T>& other) const noexcept {
+			return Segment{
+				Start + other.Start(),
+				Length - other.Start() - other.End()
+			};
 		}
 	};
-
-	using Unit = std::variant<Px>;
 
 	template<typename T>
 	struct Range {
@@ -72,6 +81,8 @@ namespace Klay {
 		T Max;
 	};
 
+	/// @brief Represents a value along 2 axes
+	/// @tparam T
 	template<typename T>
 	struct Vector2 {
 		T Axes[2];
@@ -100,14 +111,16 @@ namespace Klay {
 			return GetAxis(Axis::Vertical);
 		}
 
-		constexpr Vector2<T> operator +(const Vector2<T>& other) const noexcept {
+		template<typename U>
+		constexpr Vector2<T> operator +(const Vector2<U>& other) const noexcept {
 			return Vector2<T>{
 				Axes[0] + other.Axes[0],
 				Axes[1] + other.Axes[1]
 			};
 		}
 
-		constexpr Vector2<T>& operator +=(const Vector2<T>& other) noexcept {
+		template<typename U>
+		constexpr Vector2<T>& operator +=(const Vector2<U>& other) noexcept {
 			Axes[0] += other.Axes[0];
 			Axes[1] += other.Axes[1];
 			return *this;
@@ -117,12 +130,62 @@ namespace Klay {
 			return Axes[0] == other.Axes[0] && Axes[1] == other.Axes[1];
 		}
 	};
+	template<typename T>
+	using Point = Vector2<T>;
+	using PxPoint = Point<Px>;
+
+	template<class T>
+	struct EdgeArea : public Vector2<EdgeLength<T>> {};
+	using PxEdgeArea = EdgeArea<Px>;
+
+	/// @brief Same as Vector2<Segment<T>>
+	/// @tparam T
+	template<typename T>
+	struct Rect : public Vector2<Segment<T>> {
+		static constexpr Rect FromXYWH(T x, T y, T width, T height) {
+			return Rect{
+				Segment{x, width},
+				Segment{y, height}
+			};
+		}
+
+		static constexpr Rect FromPointSize(Vector2<T> point, Vector2<T> size){
+			return FromXYWH(
+				point.Horizontal(),
+				point.Vertical(),
+				size.Horizontal(),
+				size.Vertical()
+			);
+		}
+
+		static constexpr Rect FromWH(T width, T height) {
+			return FromXYWH(0, 0, width, height);
+		}
+
+		static constexpr Rect FromLTRB(T left, T top, T right, T bottom) {
+			return FromXYWH(left, top, right - left, bottom - top);
+		}
+
+		constexpr T X() const {
+			return this->GetAxis(Axis::Horizontal).Start;
+		}
+
+		constexpr T Y() const {
+			return this->GetAxis(Axis::Vertical).Start;
+		}
+
+		constexpr T Width() const {
+			return this->GetAxis(Axis::Horizontal).Length;
+		}
+
+		constexpr T Height() const {
+			return this->GetAxis(Axis::Vertical).Length;
+		}
+	};
 
 	using PxSize = Vector2<Px>;
 	using Size = Vector2<Unit>;
 	using OptionalSize = Vector2<std::optional<Unit>>;
-
-	using PxPoint = Vector2<Px>;
 
 	using PxRange = Range<Px>;
 	using UnitRange = Range<Unit>;
@@ -130,27 +193,5 @@ namespace Klay {
 	using SizeRange = Range<Size>;
 	using OptionalSizeRange = Range<OptionalSize>;
 
-	template<typename T>
-	struct Rect : public Vector2<Segment<T>> {
-		static Rect FromLTRB(T left, T top, T right, T bottom) {
-			return Rect{
-				Segment{left, right - left},
-				Segment{top, bottom - top}
-			};
-		}
-
-		static Rect FromXYWH(T x, T y, T width, T height) {
-			return Rect{
-				Segment{x, width},
-				Segment{y, height}
-			};
-		}
-	};
-
 	using PxRect = Rect<Px>;
-
-	std::string to_string(const Unit&);
-	std::string to_string(const Px&);
-	std::string to_string(const Segment<Px>&);
-	std::string to_string(const PxRect&);
 }

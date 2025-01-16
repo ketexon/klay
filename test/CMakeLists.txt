@@ -10,7 +10,8 @@ FetchContent_MakeAvailable(KTest)
 
 add_executable(
 	KLayTest
-	Layout.cpp
+	Size.cpp
+	Flex.cpp
 )
 
 set_target_properties(
