@@ -26,21 +26,20 @@
 	KLAY_DEFINE_ASSIGNOP_FOR_UNIT(T, value, Underlying, Underlying v, v, *=)\
 	KLAY_DEFINE_ASSIGNOP_FOR_UNIT(T, value, Underlying, Underlying v, v, /=)\
 
+#define KLAY_DEFINE_UNIT(Name, Underlying) \
+	struct Name {\
+		Underlying value;\
+		KLAY_DEFINE_OPERATORS_FOR_UNIT(Name, value, Underlying)\
+	};\
+
 namespace Klay {
+	KLAY_DEFINE_UNIT(Px, float);
+	KLAY_DEFINE_UNIT(Percent, float);
+
 	template<typename T>
 	struct Rect;
 
 	enum class Axis;
-
-	struct Px {
-		float value;
-		KLAY_DEFINE_OPERATORS_FOR_UNIT(Px, value, float)
-	};
-
-	struct Percent {
-		float value;
-		KLAY_DEFINE_OPERATORS_FOR_UNIT(Percent, value, float)
-	};
 
 	struct Unit {
 		std::variant<Px, Percent> value;

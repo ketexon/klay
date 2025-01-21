@@ -2,9 +2,12 @@
 
 #include <klay/Layout.hpp>
 #include <klay/Geometry.hpp>
+#include <klay/Unit.hpp>
 #include <vector>
 
 namespace Klay {
+	KLAY_DEFINE_UNIT(GridFr, float);
+
 	/// @brief Simple grid that can be resized upwards and accessed
 	/// @tparam T
 	template<typename T>
@@ -91,7 +94,42 @@ namespace Klay {
 		}
 	};
 
+	using GridExplicitTrackSize = std::variant<GridFr, Px, Percent>;
+
+	struct GridRepeat {
+		int count;
+		GridExplicitTrackSize size;
+	};
+
+	struct GridTrackList {
+		std::vector<GridExplicitTrackSize> sizes;
+
+		constexpr GridTrackList() = default;
+
+		constexpr GridTrackList(
+			std::vector<GridExplicitTrackSize> sizes
+		) : sizes{std::move(sizes)} {}
+
+		constexpr GridTrackList(
+			std::vector<std::variant<GridExplicitTrackSize, GridRepeat>> sizes
+		) {
+			for (const auto& size : sizes) {
+				if (std::holds_alternative<GridExplicitTrackSize>(size)) {
+					this->sizes.push_back(std::get<GridExplicitTrackSize>(size));
+				} else {
+					const auto& repeat = std::get<GridRepeat>(size);
+					for (int i = 0; i < repeat.count; ++i) {
+						this->sizes.push_back(repeat.size);
+					}
+				}
+			}
+		}
+	};
+
 	struct GridLayoutMode : LayoutMode {
+		std::optional<GridTrackList> row_track_list;
+		std::optional<GridTrackList> col_track_list;
+
 		constexpr GridLayoutMode() noexcept {}
 
 		void ComputeLayout(

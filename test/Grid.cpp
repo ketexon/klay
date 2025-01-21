@@ -280,3 +280,35 @@ TEST_CASE("Single-span Auto Positioning", SingleSpanAutoPositioning){
 		"Child 4 position wrong"
 	);
 }
+
+TEST_CASE("Grid repeat to track list", GridRepeatToTrackList) {
+	using namespace Klay;
+
+	auto track_list = GridTrackList{
+		{
+			Px{10},
+			GridRepeat{3, Px{20}},
+			Px{30},
+			GridRepeat{2, Px{40}},
+		}
+	};
+
+	std::vector<float> expected_sizes = {10, 20, 20, 20, 30, 40, 40};
+
+	test.AssertEq(
+		track_list.sizes.size(),
+		expected_sizes.size(),
+		"Track list size"
+	);
+
+	for (size_t i = 0; i < expected_sizes.size(); ++i) {
+		auto& size = track_list.sizes[i];
+		auto expected_size = expected_sizes[i];
+
+		test.AssertEq(
+			std::get<Px>(size),
+			Px{expected_size},
+			"Track list size"
+		);
+	}
+}
