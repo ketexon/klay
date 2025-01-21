@@ -1,90 +1,64 @@
 #pragma once
 
 #include <klay/Geometry.hpp>
+#include <klay/Layout.hpp>
+#include <unordered_map>
+#include <any>
+
+#include <kind/Kind.hpp>
 
 #include <vector>
 #include <memory>
 
 namespace Klay {
-	enum class Align {
-		Start,
-		Center,
-		End,
-		Stretch,
-	};
-
-	enum class Justify {
-		Start,
-		Center,
-		End,
-		SpaceBetween,
-		SpaceAround,
-		SpaceEvenly,
-	};
-
-	struct FlexLayout {
-		Axis MainAxis = Axis::Horizontal;
-		Unit Gap;
-		Align MainAlign = Align::Start;
-	};
-
-	// https://i.sstatic.net/yedYz.png
-	struct LayoutOptions {
-		Unit MainGap = Px{0};
-		Unit CrossGap = Px{0};
-		PxEdgeArea Padding;
-
-		Justify JustifyContent = Justify::Start;
-
-		Align AlignItems = Align::Start;
-		Justify JustifyItems = Justify::Start;
-	};
+	// forward
+	struct Element;
 
 	struct ItemOptions {
-		std::optional<Align> AlignSelf;
-		std::optional<Justify> JustifySelf;
-	};
+		std::optional<Align> align_self;
+		std::optional<Justify> justify_self;
+		std::optional<Unit> basis;
+		float grow = 0;
+		float shrink = 0;
 
-	struct FlexLayoutItem : ItemOptions {
-		std::optional<Unit> Basis;
-		float Grow = 0;
-		float Shrink = 0;
+		std::optional<int> row_start;
+		int row_span = 1;
+		std::optional<int> col_start;
+		int col_span = 1;
 	};
 
 	struct Element : public std::enable_shared_from_this<Element> {
-		bool DirtySize = true;
-		bool DirtyLayout = true;
+		using IDType = size_t;
 
-		OptionalSizeRange Size;
-		struct {
-			std::variant<FlexLayout> Mode;
-			LayoutOptions Options;
-		} Layout;
-		struct {
-			std::variant<FlexLayoutItem> Mode;
-			ItemOptions Options;
-		} Item;
+		bool dirty_size = true;
+		bool dirty_layout = true;
 
-		std::weak_ptr<Element> Parent;
-		std::vector<std::shared_ptr<Element>> Children;
+		OptionalSizeRange size;
 
-		PxSize ComputedMinSize;
-		PxSize ComputedSize;
-		PxPoint ComputedPosition;
+		std::weak_ptr<Element> parent;
+		std::vector<std::shared_ptr<Element>> children;
 
-		constexpr PxRect ComputedRect() const noexcept {
-			return PxRect::FromPointSize(ComputedPosition, ComputedSize);
+		std::optional<IDType> id;
+
+		PxSize computed_min_size;
+		PxSize computed_size;
+		PxPoint computed_position;
+
+		LayoutOptions layout_options;
+		std::unique_ptr<LayoutMode> layout_mode;
+		ItemOptions item_options;
+
+		inline PxRect ComputedRect() const noexcept {
+			return PxRect::FromPointSize(computed_position, computed_size);
 		}
 
-		constexpr Element()
-			: Size{}
-			, Layout{FlexLayout{Axis::Horizontal}}
-		{}
+		inline Element() : size{} {}
 
-		void ComputeLayout(const PxRect& parentRect) noexcept;
+		void ComputeLayout(const PxRect& parent_rect) noexcept;
 
 		std::shared_ptr<Element> AddChild(std::shared_ptr<Element> child) {
-			Children.push_back(child);
+
+			children.push_back(child);
 			child->Reparent(weak_from_this());
 			return child;
 		}
@@ -92,14 +66,14 @@ namespace Klay {
 		void ComputeMinSize() noexcept;
 
 		void Reparent(std::weak_ptr<Element> parent) noexcept {
-			Parent = parent;
+			this->parent = parent;
 		}
 
 		constexpr size_t NumChildren() const noexcept {
-			return Children.size();
+			return children.size();
 		}
 
 	private:
-		void ComputeFlexLayout(const PxRect& parentRect) noexcept;
+		void AssignDefaultLayoutMode() noexcept;
 	};
 }

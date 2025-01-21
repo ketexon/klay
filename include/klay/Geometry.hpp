@@ -24,14 +24,14 @@ namespace Klay {
 	/// @tparam T
 	template<typename T>
 	struct EdgeLength {
-		T Edges[2];
+		T edges[2];
 
 		constexpr T& GetEdge(Edge edge) {
-			return Edges[static_cast<size_t>(edge)];
+			return edges[static_cast<size_t>(edge)];
 		}
 
 		constexpr const T& GetEdge(Edge edge) const {
-			return Edges[static_cast<size_t>(edge)];
+			return edges[static_cast<size_t>(edge)];
 		}
 
 		constexpr T& Start() {
@@ -49,50 +49,61 @@ namespace Klay {
 		constexpr const T& End() const {
 			return GetEdge(Edge::End);
 		}
+
+		template<typename F>
+		constexpr auto Transform(F&& f) const {
+			return EdgeLength<decltype(f(Start(), Edge::Start))> {
+				f(Start(), Edge::Start),
+				f(End(), Edge::End)
+			};
+		}
 	};
 
 	/// @brief Represents a range of values from a start to an end
 	/// @tparam T
 	template<typename T>
 	struct Segment {
-		T Start;
-		T Length;
+		T start;
+		T length;
 
 		constexpr T End() const {
-			return Start + Length;
+			return start + length;
 		}
 
 		constexpr bool operator== (const Segment& other) const noexcept {
-			return Start == other.Start && Length == other.Length;
+			return start == other.start && length == other.length;
 		}
 
 		constexpr Segment operator+ (const EdgeLength<T>& other) const noexcept {
 			return Segment{
-				Start + other.Start(),
-				Length - other.Start() - other.End()
+				start + other.Start(),
+				length - other.Start() - other.End()
 			};
 		}
 	};
 
 	template<typename T>
 	struct Range {
-		T Min;
-		T Value;
-		T Max;
+		T min;
+		T value;
+		T max;
 	};
 
 	/// @brief Represents a value along 2 axes
 	/// @tparam T
 	template<typename T>
 	struct Vector2 {
-		T Axes[2];
+		T axes[2];
+
+		constexpr Vector2() = default;
+		constexpr Vector2(T x, T y) : axes{x, y} {}
 
 		constexpr T& GetAxis(Axis axis) {
-			return Axes[static_cast<size_t>(axis)];
+			return axes[static_cast<size_t>(axis)];
 		}
 
 		constexpr const T& GetAxis(Axis axis) const {
-			return Axes[static_cast<size_t>(axis)];
+			return axes[static_cast<size_t>(axis)];
 		}
 
 		constexpr T& Horizontal() {
@@ -114,20 +125,28 @@ namespace Klay {
 		template<typename U>
 		constexpr Vector2<T> operator +(const Vector2<U>& other) const noexcept {
 			return Vector2<T>{
-				Axes[0] + other.Axes[0],
-				Axes[1] + other.Axes[1]
+				axes[0] + other.axes[0],
+				axes[1] + other.axes[1]
 			};
 		}
 
 		template<typename U>
 		constexpr Vector2<T>& operator +=(const Vector2<U>& other) noexcept {
-			Axes[0] += other.Axes[0];
-			Axes[1] += other.Axes[1];
+			axes[0] += other.axes[0];
+			axes[1] += other.axes[1];
 			return *this;
 		}
 
 		constexpr bool operator ==(const Vector2<T>& other) const noexcept {
-			return Axes[0] == other.Axes[0] && Axes[1] == other.Axes[1];
+			return axes[0] == other.axes[0] && axes[1] == other.axes[1];
+		}
+
+		template<typename F>
+		constexpr auto Transform(F&& f) const {
+			return Vector2<decltype(f(Horizontal(), Axis::Horizontal))> {
+				f(Horizontal(), Axis::Horizontal),
+				f(Vertical(), Axis::Vertical)
+			};
 		}
 	};
 	template<typename T>
@@ -142,6 +161,10 @@ namespace Klay {
 	/// @tparam T
 	template<typename T>
 	struct Rect : public Vector2<Segment<T>> {
+		using Vector2<Segment<T>>::Vector2;
+		constexpr Rect() = default;
+		constexpr Rect(const Vector2<Segment<T>>& vector) : Vector2<Segment<T>>(vector) {}
+
 		static constexpr Rect FromXYWH(T x, T y, T width, T height) {
 			return Rect{
 				Segment{x, width},
@@ -167,19 +190,19 @@ namespace Klay {
 		}
 
 		constexpr T X() const {
-			return this->GetAxis(Axis::Horizontal).Start;
+			return this->GetAxis(Axis::Horizontal).start;
 		}
 
 		constexpr T Y() const {
-			return this->GetAxis(Axis::Vertical).Start;
+			return this->GetAxis(Axis::Vertical).start;
 		}
 
 		constexpr T Width() const {
-			return this->GetAxis(Axis::Horizontal).Length;
+			return this->GetAxis(Axis::Horizontal).length;
 		}
 
 		constexpr T Height() const {
-			return this->GetAxis(Axis::Vertical).Length;
+			return this->GetAxis(Axis::Vertical).length;
 		}
 	};
 

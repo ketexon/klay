@@ -5,14 +5,20 @@
 #include <string>
 #include <iostream>
 
-namespace Klay {
-	std::string to_string(const Unit&);
-	std::string to_string(const Px&);
-	std::string to_string(const Segment<Px>&);
-	std::string to_string(const PxRect&);
-}
-
 std::ostream& operator<<(std::ostream& os, const Klay::Unit& v);
 std::ostream& operator<<(std::ostream& os, const Klay::Px& v);
-std::ostream& operator<<(std::ostream& os, const Klay::Segment<Klay::Px>& v);
-std::ostream& operator<<(std::ostream& os, const Klay::PxRect& v);
+std::ostream& operator<<(std::ostream& os, const Klay::Percent& v);
+
+template<class T>
+std::ostream& operator<<(std::ostream& os, const Klay::Segment<T>& v) {
+	return os << "Segment { Start: " << v.start << ", Length:  " << v.length << " }";
+}
+
+template<class T>
+std::ostream& operator<<(std::ostream& os, const Klay::Rect<T>& v) {
+	return os << "Rect { " << v.Horizontal() << ", " << v.Vertical() << " }";
+}
+template<class T>
+std::ostream& operator<<(std::ostream& os, const Klay::Vector2<T>& v) {
+	return os << "Vector2 { " << v.Horizontal() << ", " << v.Vertical() << " }";
+}

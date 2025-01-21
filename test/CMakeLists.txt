@@ -12,6 +12,7 @@ add_executable(
 	KLayTest
 	Size.cpp
 	Flex.cpp
+	Grid.cpp
 )
 
 set_target_properties(

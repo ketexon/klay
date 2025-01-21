@@ -4,13 +4,15 @@ project(KLay)
 
 add_library(
 	KLay
-	src/Klay.cpp
 	include/klay/ToString.hpp src/ToString.cpp
-	include/klay/Klay.hpp
+	include/klay/Klay.hpp src/Klay.cpp
+	include/klay/Flex.hpp src/Flex.cpp
 	include/klay/Unit.hpp
 	include/klay/Geometry.hpp
-	include/klay/Element.hpp
+	include/klay/Element.hpp src/Element.cpp
 	include/klay/ElementBuilder.hpp
+	include/klay/Layout.hpp src/Layout.cpp
+	include/klay/Grid.hpp src/Grid.cpp
 )
 
 set_target_properties(
@@ -20,7 +22,19 @@ set_target_properties(
 	CXX_STANDARD_REQUIRED ON
 )
 
+include(FetchContent)
+
+FetchContent_Declare(
+	KInd
+	GIT_REPOSITORY https://github.com/ketexon/kind
+	GIT_TAG main
+)
+
+FetchContent_MakeAvailable(KInd)
+
 target_include_directories(KLay PUBLIC include)
+
+target_link_libraries(KLay PUBLIC KInd)
 
 add_subdirectory(test)
 add_subdirectory(unit)

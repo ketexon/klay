@@ -57,20 +57,20 @@ TEST_CASE("Justify content", JustifyContent) {
 	// spaces[i] alternates between the gaps between children and the children
 	// starting with the gap
 	const auto testJustify = [&](Justify j, std::string name, std::array<float, 7> spaces) {
-		element->Layout.Options.JustifyContent = j;
+		element->layout_options.justify_content = j;
 		element->ComputeLayout(PxRect::FromLTRB(0, 0, 100, 0));
 
 		float offset = 0;
 		for(int i = 0; i < 3; ++i){
 			offset += spaces[2 * i];
 			float size = spaces[2 * i + 1];
-			const auto rect = element->Children[i]->ComputedRect();
+			const auto rect = element->children[i]->ComputedRect();
 			const auto expected = PxRect::FromXYWH(offset, 0, size, 0);
 			const auto equal =  (
-				std::abs(rect.Horizontal().Start - expected.Horizontal().Start) < 1e-5f
-				&& std::abs(rect.Horizontal().Length - expected.Horizontal().Length) < 1e-5f
-				&& std::abs(rect.Vertical().Start - expected.Vertical().Start) < 1e-5f
-				&& std::abs(rect.Vertical().Length - expected.Vertical().Length) < 1e-5f
+				std::abs(rect.Horizontal().start - expected.Horizontal().start) < 1e-5f
+				&& std::abs(rect.Horizontal().length - expected.Horizontal().length) < 1e-5f
+				&& std::abs(rect.Vertical().start - expected.Vertical().start) < 1e-5f
+				&& std::abs(rect.Vertical().length - expected.Vertical().length) < 1e-5f
 			);
 			test.Expect(
 				equal,
@@ -172,7 +172,7 @@ TEST_CASE("Padding", FlexPadding) {
 
 	auto element = ElementBuilder{}
 		.Flex()
-		.PaddingLTRB(10, 20, 30, 40)
+		.PaddingPxLTRB(10, 20, 30, 40)
 		.AlignItems(Align::Stretch)
 		.Build();
 
@@ -186,5 +186,112 @@ TEST_CASE("Padding", FlexPadding) {
 		child1->ComputedRect(),
 		PxRect::FromXYWH(10, 20, 60, 40),
 		"Child has wrong layout"
+	);
+}
+
+TEST_CASE("Padding percent", FlexPaddingPercent) {
+	using namespace Klay;
+
+	auto element = ElementBuilder{}
+		.Flex()
+		.PaddingPercentLTRB(0.1f, 0.2f, 0.3f, 0.4f)
+		.AlignItems(Align::Stretch)
+		.Build();
+
+	auto child1 = element->AddChild(
+		ElementBuilder{}.FlexGrow(1).Build()
+	);
+
+	element->ComputeLayout(PxRect::FromXYWH(0, 0, 100, 100));
+
+	test.AssertEq(
+		child1->ComputedRect(),
+		PxRect::FromXYWH(10, 20, 60, 40),
+		"Child has wrong layout"
+	);
+}
+
+TEST_CASE("Nested Flex", NestedFlex){
+	using namespace Klay;
+
+	// element: 100x100 at 0x0
+	// 		nested 1: 50x100 (excess: 100 - 10 - 20 - 30 = 40) at 0x0
+	// 			child 1: 0x10 + 0x20 = 0x30 at 0x0
+	// 			child 2: 0x20 + 0x20 = 0x40 at 0x30
+	// 		nested 2: 50x100 (excess: 100 - 30 - 40 = 30) at 50x0
+	// 			child 3: 0x30 + 0x15 = 0x45 at 50x0
+	// 			child 4: 0x40 + 0x15 = 0x55 at 50x45
+
+	auto element = ElementBuilder{}
+		.Flex()
+		.AlignItems(Align::Stretch)
+		.Build();
+	auto nested1 = element->AddChild(
+		ElementBuilder{}
+			.FlexGrow(1)
+			.Flex(Axis::Vertical)
+			.AlignItems(Align::Stretch)
+			.Gap(Px{30})
+			.Build()
+	);
+	auto nested2 = element->AddChild(
+		ElementBuilder{}
+			.FlexGrow(1)
+			.Flex(Axis::Vertical)
+			.AlignItems(Align::Stretch)
+			.Build()
+	);
+
+	auto child1 = nested1->AddChild(
+		ElementBuilder{}.FlexGrow(1).MinHeight(Px{10}).ID(1).Build()
+	);
+	auto child2 = nested1->AddChild(
+		ElementBuilder{}.FlexGrow(1).MinHeight(Px{20}).ID(2).Build()
+	);
+	auto child3 = nested2->AddChild(
+		ElementBuilder{}.FlexGrow(1).MinHeight(Px{30}).ID(3).Build()
+	);
+	auto child4 = nested2->AddChild(
+		ElementBuilder{}.FlexGrow(1).MinHeight(Px{40}).ID(4).Build()
+	);
+
+	element->ComputeLayout(PxRect::FromXYWH(0, 0, 100, 100));
+	nested1->ComputeLayout(nested1->ComputedRect());
+	nested2->ComputeLayout(nested2->ComputedRect());
+
+	test.AssertEq(
+		nested1->ComputedRect(),
+		PxRect::FromXYWH(0, 0, 50, 100),
+		"Nested 1 has wrong layout"
+	);
+
+	test.AssertEq(
+		nested2->ComputedRect(),
+		PxRect::FromXYWH(50, 0, 50, 100),
+		"Nested 2 has wrong layout"
+	);
+
+	test.AssertEq(
+		child1->ComputedRect(),
+		PxRect::FromXYWH(0, 0, 50, 30),
+		"Child 1 has wrong layout"
+	);
+
+	test.AssertEq(
+		child2->ComputedRect(),
+		PxRect::FromXYWH(0, 60, 50, 40),
+		"Child 2 has wrong layout"
+	);
+
+	test.AssertEq(
+		child3->ComputedRect(),
+		PxRect::FromXYWH(50, 0, 50, 45),
+		"Child 3 has wrong layout"
+	);
+
+	test.AssertEq(
+		child4->ComputedRect(),
+		PxRect::FromXYWH(50, 45, 50, 55),
+		"Child 4 has wrong layout"
 	);
 }
