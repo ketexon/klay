@@ -1,3 +1,4 @@
+#include <klay/Klay.hpp>
 #include <ktest/KTest.hpp>
 
 #include <klay/Grid.hpp>
