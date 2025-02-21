@@ -13,12 +13,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(raylib_cpp)
 
 add_executable(
-	KlayUnit
+	KLayUnit
+	Unit.hpp
 	Main.cpp
+	Flex.cpp
 )
 
 target_link_libraries(
-	KlayUnit
+	KLayUnit
 	PRIVATE
 	raylib
 	raylib_cpp
@@ -26,8 +28,9 @@ target_link_libraries(
 )
 
 set_target_properties(
-	KlayUnit
+	KLayUnit
 	PROPERTIES
 	CXX_STANDARD 20
 	CXX_STANDARD_REQUIRED ON
+	EXPORT_COMPILE_COMMANDS ON
 )

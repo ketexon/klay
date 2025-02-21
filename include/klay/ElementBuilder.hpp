@@ -3,6 +3,7 @@
 #include <klay/Element.hpp>
 #include <klay/Flex.hpp>
 #include <klay/Grid.hpp>
+#include <any>
 #include <iostream>
 
 namespace Klay {
@@ -167,6 +168,11 @@ namespace Klay {
 
 		constexpr ElementBuilder& ID(Element::IDType id) {
 			element.id = id;
+			return *this;
+		}
+
+		constexpr ElementBuilder& UserData(auto data) {
+			element.user_data = std::move(data);
 			return *this;
 		}
 

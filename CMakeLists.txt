@@ -20,7 +20,16 @@ set_target_properties(
 	PROPERTIES
 	CXX_STANDARD 20
 	CXX_STANDARD_REQUIRED ON
+	CXX_EXTENSIONS OFF
 )
+
+if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+	set_target_properties(
+		KLay
+		PROPERTIES
+		EXPORT_COMPILE_COMMANDS ON
+	)
+endif()
 
 include(FetchContent)
 
@@ -33,7 +42,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(KInd)
 
 target_include_directories(KLay PUBLIC include)
-
 target_link_libraries(KLay PUBLIC KInd)
 
 add_subdirectory(test)

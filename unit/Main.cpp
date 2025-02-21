@@ -1,10 +1,15 @@
 #include <raylib-cpp.hpp>
 #include <klay/Klay.hpp>
+#include <vector>
+
+#include "./Unit.hpp"
 
 constexpr int screenWidth = 600;
 constexpr int screenHeight = 400;
 
-void DrawElement(std::shared_ptr<const Klay::Element> element, Color color){
+UnitTest::UnitTest(raylib::Window* window) : window(window) {}
+
+void UnitTest::DrawElement(std::shared_ptr<const Klay::Element> element, Color color){
 	auto rect = element->ComputedRect();
 	DrawRectangle(
 		static_cast<int>(rect.X()),
@@ -16,42 +21,29 @@ void DrawElement(std::shared_ptr<const Klay::Element> element, Color color){
 }
 
 int main(){
-	auto root = Klay::ElementBuilder{}
-		.Flex()
-		.JustifyContent(Klay::Justify::SpaceEvenly)
-		.AlignItems(Klay::Align::Center)
-		.Gap(Klay::Px{8})
-		.Build();
-	auto child1 = Klay::ElementBuilder{}.MinWidth(Klay::Px{50}).MinHeight(Klay::Px{50}).Build();
-	auto child2 = Klay::ElementBuilder{}.MinWidth(Klay::Px{50}).MinHeight(Klay::Px{50}).Build();
-	auto child3 = Klay::ElementBuilder{}.MinWidth(Klay::Px{50}).MinHeight(Klay::Px{50}).Build();
-
-	root->AddChild(child1);
-	root->AddChild(child2);
-	root->AddChild(child3);
-
 	raylib::Window window {
 		screenWidth, screenHeight,
 		"Klay Unit Test",
 		FLAG_WINDOW_RESIZABLE
 	};
 
-	const auto recomputeLayout = [&](){
-		root->ComputeLayout(Klay::PxRect::FromWH(window.GetWidth(), window.GetHeight()));
+	UnitTestFlex flex{&window};
+	auto units = std::vector<UnitTest*> {
+		&flex,
 	};
-	recomputeLayout();
+	size_t unit_index = 0;
+
+	units[unit_index]->Init();
 
 	while(!window.ShouldClose()){
 		if(window.IsResized()){
-			recomputeLayout();
+			units[unit_index]->OnResize();
 		}
 
 		window.BeginDrawing();
 		window.ClearBackground(RAYWHITE);
 
-		DrawElement(child1, RED);
-		DrawElement(child2, GREEN);
-		DrawElement(child3, BLUE);
+		units[unit_index]->Run();
 
 		window.EndDrawing();
 	}
